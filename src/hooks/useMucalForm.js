@@ -15,7 +15,7 @@ const DEFAULT_STATE = {
   x_minmax: [-200, 1000],
   x_step: 1,
   targetedgestep: 1,
-  plotflag: false,
+  plotflag: true,
   // Calculated results (not persisted)
   samplemass: 0,
   diluentmass: 0,
