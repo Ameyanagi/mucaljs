@@ -1,153 +1,84 @@
-* {
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 120 30% 98%;
+    --foreground: 120 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 120 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 120 10% 10%;
+    --primary: 120 15% 35%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 120 20% 92%;
+    --secondary-foreground: 120 15% 25%;
+    --muted: 120 10% 95%;
+    --muted-foreground: 120 10% 40%;
+    --accent: 120 20% 90%;
+    --accent-foreground: 120 15% 25%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 120 15% 85%;
+    --input: 120 15% 85%;
+    --ring: 120 15% 35%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 120 10% 10%;
+    --foreground: 120 10% 98%;
+    --card: 120 10% 12%;
+    --card-foreground: 120 10% 98%;
+    --popover: 120 10% 12%;
+    --popover-foreground: 120 10% 98%;
+    --primary: 120 20% 50%;
+    --primary-foreground: 120 10% 10%;
+    --secondary: 120 10% 20%;
+    --secondary-foreground: 120 10% 98%;
+    --muted: 120 10% 20%;
+    --muted-foreground: 120 10% 60%;
+    --accent: 120 10% 20%;
+    --accent-foreground: 120 10% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 120 10% 20%;
+    --input: 120 10% 20%;
+    --ring: 120 20% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Chart container styling */
+.chart-container {
+  @apply w-full max-w-2xl mx-auto p-4;
+}
+
+/* Hide number input spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
   margin: 0;
-  padding: 0;
-  box-sizing: border-box;
 }
 
-html {
-  font-size: 10px;
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-.App {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh; 
-  width: 100%; 
-  max-width: 500px;
-  border: 1px solid #556E53;
-  margin: auto;
-}
-
-
-header {
-  width: 100%;
-  padding: 0 0.25em;
-  background-color: #556E53;
-  color: aliceblue;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-header a {
-  color: aliceblue;
-  text-decoration: none;
-}
-
-header a:hover {
-  text-decoration: underline;
-}
-
-main {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  justify-content: flex-start;
-  align-items: left;
-  overflow-y: auto;
-}
-
-h2 {
-  margin: 0.5rem;
-  font-size: 12px;
-}
-
-footer {
-  width: 100%;
-  padding: 0.25em;
-  background-color: #556E53;
-  color: aliceblue;
-  display: grid;
-  place-content: center;
-}
-
-.mucalform input, select{
-  height: 1.5rem;
-  font-size: 1rem;
-  border-radius: 0.5rem;
-  background-color: #efffef;
-  border: 1px solid #556E53;
-  padding: 0rem 0.25rem;
-}
-
-.mucalform input[type="number"] {
-  width: 5rem;
-}
-
-input[type="number"]::-webkit-outer-spin-button, 
-input[type="number"]::-webkit-inner-spin-button { 
-  -webkit-appearance: none; 
-  margin: 0; 
-} 
-
-input[type="number"] { 
-  -moz-appearance:textfield; 
-} 
-
-
-label,
-input, select {
-  /* In order to define widths */
-  display: inline-block;
-}
-
-label {
-  width: 30%;
-  /* Positions the label text beside the input */
-  text-align: right;
-}
-
-label+input {
-  margin: 0 1% 0 4%;
-}
-
-label+select {
-  margin: 0 1% 0 4%;
-}
-
-/* Only the submit button is matched by this selector,
-       but to be sure you could use an id or class for that button */
-
-input+input {
-  float: right;
-}
-
-
-
-button {
-  height: 20px;
-  min-width: 48px;
-  border-radius: 0.5rem;
-  padding: 0rem 0.5rem;
-  font-size: 1rem;
-  background-color: #efffef;
-  color: #556E53;
-  cursor: pointer;
-  place-items: center;
-  border: 1px solid #556E53;
-}
-
-button:focus, 
-button:hover {
-  color: white;
-  background-color: #556E53;
-  outline: none;
-}
-
-/* align in the center */
-.abschart {
-  width: 80%;
-  margin: auto;
+/* Fix select vertical alignment */
+select {
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 1.75rem; /* Match h-7 (28px) */
 }
