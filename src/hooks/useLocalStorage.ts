@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 
 /**
  * Custom hook for syncing state with localStorage
- * @param {string} key - localStorage key
- * @param {*} initialValue - Default value if not in localStorage
- * @returns {[*, Function]} Current value and setter function
+ * @param key - localStorage key
+ * @param initialValue - Default value if not in localStorage
+ * @returns Current value and setter function
  */
-export function useLocalStorage(key, initialValue) {
+export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
   // Get initial value from localStorage or use default
-  const [storedValue, setStoredValue] = useState(() => {
+  const [storedValue, setStoredValue] = useState<T>(() => {
     try {
       const item = localStorage.getItem(key)
       return item ? JSON.parse(item) : initialValue
@@ -19,7 +19,7 @@ export function useLocalStorage(key, initialValue) {
   })
 
   // Update localStorage when value changes
-  const setValue = useCallback((value) => {
+  const setValue = useCallback((value: T | ((val: T) => T)) => {
     try {
       // Allow value to be a function for state updates
       const valueToStore = value instanceof Function ? value(storedValue) : value
@@ -35,17 +35,17 @@ export function useLocalStorage(key, initialValue) {
 
 /**
  * Load multiple values from localStorage at once
- * @param {Object} defaults - Object with keys and default values
- * @returns {Object} Object with values from localStorage or defaults
+ * @param defaults - Object with keys and default values
+ * @returns Object with values from localStorage or defaults
  */
-export function loadFromStorage(defaults) {
-  const result = {}
+export function loadFromStorage<T extends Record<string, unknown>>(defaults: T): T {
+  const result = {} as T
   for (const [key, defaultValue] of Object.entries(defaults)) {
     try {
       const item = localStorage.getItem(key)
-      result[key] = item ? JSON.parse(item) : defaultValue
+      ;(result as Record<string, unknown>)[key] = item ? JSON.parse(item) : defaultValue
     } catch {
-      result[key] = defaultValue
+      ;(result as Record<string, unknown>)[key] = defaultValue
     }
   }
   return result
@@ -53,9 +53,9 @@ export function loadFromStorage(defaults) {
 
 /**
  * Save multiple values to localStorage at once
- * @param {Object} values - Object with keys and values to save
+ * @param values - Object with keys and values to save
  */
-export function saveToStorage(values) {
+export function saveToStorage(values: Record<string, unknown>): void {
   for (const [key, value] of Object.entries(values)) {
     try {
       localStorage.setItem(key, JSON.stringify(value))

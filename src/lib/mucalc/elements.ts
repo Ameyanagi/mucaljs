@@ -16,18 +16,22 @@ export const ELEMENTS = [
   "Tl", "Pb", "Bi", "Po", "At", "Rn", "Fr", "Ra", "Ac", "Th",
   "Pa", "U", "Np", "Pu", "Am", "Cm", "Bk", "Cf", "Es", "Fm",
   "Md", "No", "Lr"
-]
+] as const
+
+export type ElementSymbol = typeof ELEMENTS[number]
 
 /** Element symbol to atomic number (Z) mapping */
-export const ELEMENT_TO_Z = Object.fromEntries(
+export const ELEMENT_TO_Z: Record<ElementSymbol, number> = Object.fromEntries(
   ELEMENTS.map((el, i) => [el, i])
-)
+) as Record<ElementSymbol, number>
 
 /** Available absorption edges */
-export const EDGES = ["K", "L1", "L2", "L3", "M"]
+export const EDGES = ["K", "L1", "L2", "L3", "M"] as const
+
+export type EdgeType = typeof EDGES[number]
 
 /** Edge labels for UI display */
-export const EDGE_LABELS = {
+export const EDGE_LABELS: Record<EdgeType, string> = {
   K: "K edge",
   L1: "L1 edge",
   L2: "L2 edge",
@@ -36,14 +40,14 @@ export const EDGE_LABELS = {
 }
 
 /** Elements with missing data (Z values) */
-export const MISSING_DATA_Z = [83, 84, 86, 87, 88, 90, 92]
+export const MISSING_DATA_Z = [83, 84, 86, 87, 88, 90, 92] as const
 
 /**
  * Check if an element has data available
- * @param {string} symbol - Element symbol
- * @returns {boolean} True if data is available
+ * @param symbol - Element symbol
+ * @returns True if data is available
  */
-export function hasElementData(symbol) {
+export function hasElementData(symbol: ElementSymbol): boolean {
   const z = ELEMENT_TO_Z[symbol]
-  return z !== undefined && !MISSING_DATA_Z.includes(z)
+  return z !== undefined && !MISSING_DATA_Z.includes(z as typeof MISSING_DATA_Z[number])
 }

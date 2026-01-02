@@ -26,3 +26,5 @@ export {
   MISSING_DATA_Z,
   hasElementData
 } from './elements'
+
+export type { ElementSymbol, EdgeType } from './elements'

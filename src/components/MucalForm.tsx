@@ -1,3 +1,4 @@
+import React from 'react'
 import { Card } from './ui/card'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -8,8 +9,10 @@ import { ElementSelector } from './ElementSelector'
 import { LineChart } from './LineChart'
 import { Download, RotateCcw, Calculator } from 'lucide-react'
 import { EDGES, EDGE_LABELS } from '@/lib/mucalc'
+import type { MucalFormState } from '@/hooks/useMucalForm'
+import type { EdgeType } from '@/lib/mucalc'
 
-function downloadCSV(data, filename) {
+function downloadCSV(data: (string | number)[][], filename: string) {
   const csvContent = data.map(row => row.join(',')).join('\n')
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
@@ -22,7 +25,14 @@ function downloadCSV(data, filename) {
   URL.revokeObjectURL(url)
 }
 
-function FormRow({ label, htmlFor, children, unit }) {
+interface FormRowProps {
+  label: string
+  htmlFor?: string
+  children: React.ReactNode
+  unit?: string
+}
+
+function FormRow({ label, htmlFor, children, unit }: FormRowProps) {
   return (
     <div className="flex items-center gap-1.5 text-sm">
       <Label htmlFor={htmlFor} className="w-28 text-right shrink-0 text-xs">{label}</Label>
@@ -32,32 +42,46 @@ function FormRow({ label, htmlFor, children, unit }) {
   )
 }
 
-export function MucalForm({ state, handlers }) {
+interface MucalFormHandlers {
+  setField: <K extends keyof MucalFormState>(field: K, value: MucalFormState[K]) => void
+  setMultiple: (values: Partial<MucalFormState>) => void
+  calcAreaFromDiameter: (diameter: number, angle: number) => number
+  calcDiameterFromArea: (area: number, angle: number) => number
+  calcAbsorptionData: () => void
+  resetAll: () => void
+}
+
+interface MucalFormProps {
+  state: MucalFormState
+  handlers: MucalFormHandlers
+}
+
+export function MucalForm({ state, handlers }: MucalFormProps) {
   const { setField, calcAreaFromDiameter, calcDiameterFromArea, calcAbsorptionData, resetAll } = handlers
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     calcAbsorptionData()
   }
 
-  const handlePlotChange = (checked) => {
+  const handlePlotChange = (checked: boolean) => {
     setField('plotflag', checked)
     if (checked) calcAbsorptionData()
   }
 
-  const handleDiameterChange = (e) => {
+  const handleDiameterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = parseFloat(e.target.value) || 0
     setField('diameter', v)
     calcAreaFromDiameter(v, state.angle)
   }
 
-  const handleAngleChange = (e) => {
+  const handleAngleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = parseFloat(e.target.value) || 0
     setField('angle', v)
     calcAreaFromDiameter(state.diameter, v)
   }
 
-  const handleAreaChange = (e) => {
+  const handleAreaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = parseFloat(e.target.value) || 0
     setField('area', v)
     calcDiameterFromArea(v, state.angle)
@@ -115,7 +139,7 @@ export function MucalForm({ state, handlers }) {
               <ElementSelector id="atom" value={state.atom}
                 onChange={(e) => setField('atom', e.target.value)} className="h-7 w-14 text-sm" />
               <Select id="edge" value={state.edge}
-                onChange={(e) => setField('edge', e.target.value)} className="h-7 w-20 text-sm">
+                onChange={(e) => setField('edge', e.target.value as EdgeType)} className="h-7 w-20 text-sm">
                 {EDGES.map((edge) => (
                   <SelectOption key={edge} value={edge}>{EDGE_LABELS[edge]}</SelectOption>
                 ))}

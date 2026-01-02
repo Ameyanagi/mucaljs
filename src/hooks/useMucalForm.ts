@@ -1,9 +1,47 @@
 import { useReducer, useCallback, useEffect } from 'react'
 import { loadFromStorage, saveToStorage } from './useLocalStorage'
 import { calcEdgeStep, calcAbsorption, calcXRange, getEdgeEnergy } from '../mucalc'
+import type { EdgeType } from '../lib/mucalc'
+
+// Chart.js dataset type
+interface ChartDataset {
+  label: string
+  data: number[]
+  borderColor: string
+  backgroundColor: string
+  pointRadius: number
+  borderWidth: number
+}
+
+interface ChartData {
+  labels: number[]
+  datasets: ChartDataset[]
+}
+
+// Form state type
+export interface MucalFormState {
+  atom: string
+  diluent: string
+  sample: string
+  mass: number
+  edge: EdgeType
+  area: number
+  diameter: number
+  angle: number
+  x_minmax: [number, number]
+  x_step: number
+  targetedgestep: number
+  plotflag: boolean
+  // Calculated results (not persisted)
+  samplemass: number
+  diluentmass: number
+  xrange: number[] | null
+  chartData: ChartData | null
+  csvdata: (string | number)[][] | null
+}
 
 // Default form values
-const DEFAULT_STATE = {
+const DEFAULT_STATE: MucalFormState = {
   atom: "Ru",
   diluent: "BN",
   sample: "Ru",
@@ -29,25 +67,24 @@ const PERSISTED_KEYS = [
   'atom', 'diluent', 'sample', 'mass', 'edge',
   'area', 'diameter', 'angle', 'x_minmax', 'x_step',
   'targetedgestep', 'plotflag'
-]
+] as const
 
 // Action types
-const ACTIONS = {
-  SET_FIELD: 'SET_FIELD',
-  SET_MULTIPLE: 'SET_MULTIPLE',
-  SET_RESULTS: 'SET_RESULTS',
-  RESET_ALL: 'RESET_ALL',
-}
+type Action =
+  | { type: 'SET_FIELD'; field: keyof MucalFormState; value: unknown }
+  | { type: 'SET_MULTIPLE'; values: Partial<MucalFormState> }
+  | { type: 'SET_RESULTS'; results: Partial<MucalFormState> }
+  | { type: 'RESET_ALL' }
 
-function formReducer(state, action) {
+function formReducer(state: MucalFormState, action: Action): MucalFormState {
   switch (action.type) {
-    case ACTIONS.SET_FIELD:
+    case 'SET_FIELD':
       return { ...state, [action.field]: action.value }
-    case ACTIONS.SET_MULTIPLE:
+    case 'SET_MULTIPLE':
       return { ...state, ...action.values }
-    case ACTIONS.SET_RESULTS:
+    case 'SET_RESULTS':
       return { ...state, ...action.results }
-    case ACTIONS.RESET_ALL:
+    case 'RESET_ALL':
       return { ...DEFAULT_STATE }
     default:
       return state
@@ -59,14 +96,14 @@ function formReducer(state, action) {
  */
 export function useMucalForm() {
   // Initialize state from localStorage
-  const initialState = {
+  const initialState: MucalFormState = {
     ...DEFAULT_STATE,
     ...loadFromStorage(
       PERSISTED_KEYS.reduce((acc, key) => {
         acc[key] = DEFAULT_STATE[key]
         return acc
-      }, {})
-    )
+      }, {} as Record<string, unknown>)
+    ) as Partial<MucalFormState>
   }
 
   const [state, dispatch] = useReducer(formReducer, initialState)
@@ -76,29 +113,29 @@ export function useMucalForm() {
     const valuesToSave = PERSISTED_KEYS.reduce((acc, key) => {
       acc[key] = state[key]
       return acc
-    }, {})
+    }, {} as Record<string, unknown>)
     saveToStorage(valuesToSave)
   }, [state.atom, state.diluent, state.sample, state.mass, state.edge,
       state.area, state.diameter, state.angle, state.x_minmax, state.x_step,
       state.targetedgestep, state.plotflag])
 
   // Field setters
-  const setField = useCallback((field, value) => {
-    dispatch({ type: ACTIONS.SET_FIELD, field, value })
+  const setField = useCallback(<K extends keyof MucalFormState>(field: K, value: MucalFormState[K]) => {
+    dispatch({ type: 'SET_FIELD', field, value })
   }, [])
 
-  const setMultiple = useCallback((values) => {
-    dispatch({ type: ACTIONS.SET_MULTIPLE, values })
+  const setMultiple = useCallback((values: Partial<MucalFormState>) => {
+    dispatch({ type: 'SET_MULTIPLE', values })
   }, [])
 
   // Geometry calculations
-  const calcAreaFromDiameter = useCallback((diameter, angle) => {
+  const calcAreaFromDiameter = useCallback((diameter: number, angle: number) => {
     const area = diameter * diameter * Math.PI / 4 * Math.cos(angle * Math.PI / 180)
     setField('area', area)
     return area
   }, [setField])
 
-  const calcDiameterFromArea = useCallback((area, angle) => {
+  const calcDiameterFromArea = useCallback((area: number, angle: number) => {
     const diameter = Math.sqrt(area * 4 / Math.PI / Math.cos(angle * Math.PI / 180))
     setField('diameter', diameter)
     return diameter
@@ -125,10 +162,10 @@ export function useMucalForm() {
     const edgeEnergy = getEdgeEnergy(atom, edge)
     const xRange = calcXRange('atom', edgeEnergy + x_minmax[0] / 1000, edgeEnergy + x_minmax[1] / 1000, x_step / 1000)
 
-    const csvdata = [["energy [keV]", "sample [abs]", "diluent [abs]", "total [abs]"]]
-    const sampleAbs = []
-    const diluentAbs = []
-    const totalAbs = []
+    const csvdata: (string | number)[][] = [["energy [keV]", "sample [abs]", "diluent [abs]", "total [abs]"]]
+    const sampleAbs: number[] = []
+    const diluentAbs: number[] = []
+    const totalAbs: number[] = []
 
     for (let i = 0; i < xRange.length; i++) {
       const sAbs = calcAbsorption(sample, xRange[i], area) * sampleWeight
@@ -141,7 +178,7 @@ export function useMucalForm() {
       csvdata.push([xRange[i], sAbs, dAbs, tAbs])
     }
 
-    const chartData = {
+    const chartData: ChartData = {
       labels: xRange,
       datasets: [
         {
@@ -172,7 +209,7 @@ export function useMucalForm() {
     }
 
     dispatch({
-      type: ACTIONS.SET_RESULTS,
+      type: 'SET_RESULTS',
       results: {
         samplemass: sampleWeight,
         diluentmass: diluentWeight,
@@ -187,7 +224,7 @@ export function useMucalForm() {
 
   // Reset all values
   const resetAll = useCallback(() => {
-    dispatch({ type: ACTIONS.RESET_ALL })
+    dispatch({ type: 'RESET_ALL' })
   }, [])
 
   return {
